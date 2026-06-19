@@ -21,7 +21,7 @@ backend:
 	docker compose up --build backend
 
 up:
-	docker compose --profile dev up --build
+	docker compose up --build
 
 down:
 	docker compose down

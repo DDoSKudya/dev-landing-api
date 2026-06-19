@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <h2>New contact form submission</h2>
+    <p><strong>Name:</strong> {{ name }}</p>
+    <p><strong>Phone:</strong> {{ phone }}</p>
+    <p><strong>Email:</strong> {{ email }}</p>
+    <p><strong>Comment:</strong></p>
+    <p>{{ comment }}</p>
+    {% if sentiment %}
+    <p><strong>Sentiment:</strong> {{ sentiment }}</p>
+    {% endif %}
+    {% if request_category %}
+    <p><strong>Category:</strong> {{ request_category }}</p>
+    {% endif %}
+    {% if draft_reply %}
+    <p><strong>AI draft reply:</strong></p>
+    <p>{{ draft_reply }}</p>
+    {% endif %}
+  </body>
+</html>
