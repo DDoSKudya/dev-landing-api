@@ -1,15 +1,26 @@
+import pytest
+
 from app.contact.ai import AIResult
-
-VALID_PAYLOAD = {
-    "name": "Ivan Petrov",
-    "phone": "+79991234567",
-    "email": "ivan@example.com",
-    "comment": "Interested in collaboration on FastAPI.",
-}
+from tests.helpers import VALID_PAYLOAD, payload
 
 
-async def test_metrics_empty(client):
-    response = await client.get("/api/metrics?days=30")
+@pytest.mark.parametrize(
+    "days",
+    [0, -1, 366, 1000],
+    ids=["days_below_min", "days_negative", "days_above_max", "days_far_above_max"],
+)
+async def test_metrics_days_invalid_class(client, days):
+    response = await client.get(f"/api/metrics?days={days}")
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "days",
+    [1, 30, 365],
+    ids=["days_boundary_min", "days_default_range", "days_boundary_max"],
+)
+async def test_metrics_days_valid_class(client, days):
+    response = await client.get(f"/api/metrics?days={days}")
     assert response.status_code == 200
     body = response.json()
     assert body["total"] == 0
@@ -18,7 +29,14 @@ async def test_metrics_empty(client):
     assert body["ai_unavailable_count"] == 0
 
 
-async def test_metrics_after_submissions(client, monkeypatch):
+async def test_metrics_empty_state(client):
+    response = await client.get("/api/metrics")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 0
+
+
+async def test_metrics_aggregates_submissions(client, monkeypatch):
     async def analyze(_comment: str):
         return AIResult(
             sentiment="positive",
@@ -29,13 +47,9 @@ async def test_metrics_after_submissions(client, monkeypatch):
     monkeypatch.setattr("app.contact.service.analyze_comment", analyze)
 
     await client.post("/api/contact", json=VALID_PAYLOAD)
-    await client.post(
-        "/api/contact",
-        json={**VALID_PAYLOAD, "email": "other@example.com"},
-    )
+    await client.post("/api/contact", json=payload(email="other@example.com"))
 
     response = await client.get("/api/metrics?days=30")
-    assert response.status_code == 200
     body = response.json()
     assert body["total"] == 2
     assert body["by_category"] == {"collaboration": 2}
@@ -43,6 +57,15 @@ async def test_metrics_after_submissions(client, monkeypatch):
     assert body["ai_unavailable_count"] == 0
 
 
-async def test_metrics_invalid_days(client):
-    response = await client.get("/api/metrics?days=0")
-    assert response.status_code == 422
+async def test_metrics_counts_ai_unavailable(client, monkeypatch):
+    async def unavailable(_comment: str):
+        return None
+
+    monkeypatch.setattr("app.contact.service.analyze_comment", unavailable)
+
+    await client.post("/api/contact", json=VALID_PAYLOAD)
+
+    response = await client.get("/api/metrics?days=30")
+    body = response.json()
+    assert body["total"] == 1
+    assert body["ai_unavailable_count"] == 1

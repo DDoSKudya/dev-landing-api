@@ -20,6 +20,4 @@ class ContactSubmission(Base):
     request_category: Mapped[str | None] = mapped_column(String(50), nullable=True)
     ai_draft_reply: Mapped[str | None] = mapped_column(Text, nullable=True)
     ai_status: Mapped[str] = mapped_column(String(20), default="unavailable")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
+from app.__version__ import __version__
 from app.core.database import check_database
 
 router = APIRouter(tags=["health"])
@@ -13,7 +14,7 @@ async def health() -> JSONResponse:
     db_ok = await check_database()
     body = {
         "status": "ok" if db_ok else "degraded",
-        "version": "0.1.0",
+        "version": __version__,
         "timestamp": datetime.now(UTC).isoformat(),
         "checks": {"database": "ok" if db_ok else "error"},
     }
