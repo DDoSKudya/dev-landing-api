@@ -19,8 +19,8 @@ _jinja = Environment(
 )
 
 
-def _render_template(name: str, **context: object) -> str:
-    return _jinja.get_template(name).render(**context)
+def _render_template(template_name: str, **context: object) -> str:
+    return _jinja.get_template(template_name).render(**context)
 
 
 async def _send_html_email(to: str, subject: str, html: str) -> None:
@@ -31,16 +31,14 @@ async def _send_html_email(to: str, subject: str, html: str) -> None:
     message.set_content("Please view this email in an HTML-capable client.")
     message.add_alternative(html, subtype="html")
 
-    smtp_kwargs: dict[str, object] = {
-        "hostname": settings.smtp_host,
-        "port": settings.smtp_port,
-        "use_tls": settings.smtp_use_tls,
-    }
-    if settings.smtp_user:
-        smtp_kwargs["username"] = settings.smtp_user
-        smtp_kwargs["password"] = settings.smtp_password
-
-    await aiosmtplib.send(message, **smtp_kwargs)
+    await aiosmtplib.send(
+        message,
+        hostname=settings.smtp_host,
+        port=settings.smtp_port,
+        use_tls=settings.smtp_use_tls,
+        username=settings.smtp_user or None,
+        password=settings.smtp_password or None,
+    )
 
 
 async def send_contact_emails(data: ContactCreate, submission: ContactSubmission) -> None:
@@ -64,7 +62,7 @@ async def send_contact_emails(data: ContactCreate, submission: ContactSubmission
         user_html = _render_template("user.html", name=data.name)
         await _send_html_email(
             data.email,
-            "We received your message",
+            "Мы получили ваше сообщение",
             user_html,
         )
     except Exception as exc:

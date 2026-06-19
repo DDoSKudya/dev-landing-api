@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dev-landing-api"
-version = "0.1.0"
+version = "1.0.0"
 description = "Backend API for developer landing page"
 authors = []
 packages = [{ include = "app" }]
@@ -24,6 +24,8 @@ pytest = "^8.3.0"
 pytest-asyncio = "^0.24.0"
 httpx = "^0.28.0"
 ruff = "^0.8.0"
+mypy = "^2.1.0"
+types-jinja2 = "^2.11.9"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -35,6 +37,27 @@ target-version = "py312"
 
 [tool.ruff.lint.per-file-ignores]
 "alembic/env.py" = ["F401"]
+"tests/**/*.py" = [
+    "E402",    # conftest: env vars before app imports
+    "S101",    # assert in tests
+    "ARG001",  # fixture arguments
+    "ARG002",
+    "PLR2004", # magic values in parametrized cases
+    "PT011",   # broad pytest.raises
+]
+
+[tool.mypy]
+python_version = "3.12"
+explicit_package_bases = true
+mypy_path = "."
+warn_unused_ignores = true
+warn_redundant_casts = true
+check_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["alembic.*"]
+ignore_errors = true
 
 [build-system]
 requires = ["poetry-core"]

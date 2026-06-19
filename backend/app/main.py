@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.__version__ import __version__
 from app.core.config import settings
 from app.core.database import engine
 from app.core.error_handlers import register_error_handlers
@@ -23,7 +24,7 @@ async def lifespan(_app: FastAPI):
 def create_app() -> FastAPI:
     setup_logging()
 
-    app = FastAPI(title=settings.app_name, lifespan=lifespan)
+    app = FastAPI(title=settings.app_name, version=__version__, lifespan=lifespan)
     register_error_handlers(app)
 
     app.add_middleware(

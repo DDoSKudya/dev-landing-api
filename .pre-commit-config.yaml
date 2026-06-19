@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      - id: ruff
+        args: [--config, backend/pyproject.toml, --fix]
+        files: ^backend/
+      - id: ruff-format
+        args: [--config, backend/pyproject.toml]
+        files: ^backend/
+
+  - repo: local
+    hooks:
+      - id: mypy-backend
+        name: mypy (backend)
+        entry: bash -c 'cd backend && POETRY_KEYRING_ENABLED=0 poetry run mypy app tests'
+        language: system
+        files: ^backend/
+        pass_filenames: false
+
+      - id: eslint-frontend
+        name: eslint (frontend)
+        entry: bash -c 'cd frontend && npm run lint'
+        language: system
+        files: ^frontend/
+        pass_filenames: false
