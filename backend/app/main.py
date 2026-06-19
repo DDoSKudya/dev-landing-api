@@ -10,6 +10,7 @@ from app.core.logging import setup_logging
 from app.core.middleware import DbSessionMiddleware, RequestLoggingMiddleware
 from app.contact.router import router as contact_router
 from app.health.router import router as health_router
+from app.metrics.router import router as metrics_router
 
 
 @asynccontextmanager
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health_router, prefix="/api")
     app.include_router(contact_router, prefix="/api")
+    app.include_router(metrics_router, prefix="/api")
     return app
 
 
