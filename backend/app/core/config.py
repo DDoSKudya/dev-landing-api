@@ -22,6 +22,21 @@ class Settings(BaseSettings):
     data_dir: Path | None = None
     logs_dir: Path | None = None
 
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o-mini"
+    openai_timeout_sec: int = 15
+
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = False
+    email_from: str = "noreply@example.com"
+    email_owner: str = "owner@example.com"
+
+    rate_limit_requests: int = 5
+    rate_limit_window_sec: int = 3600
+
     @property
     def resolved_data_dir(self) -> Path:
         return self.data_dir or (PROJECT_ROOT / "data")

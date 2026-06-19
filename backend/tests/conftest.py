@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 os.environ["DATA_DIR"] = tempfile.mkdtemp()
+os.environ["RATE_LIMIT_REQUESTS"] = "100"
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -11,7 +12,9 @@ from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from app.contact.models import ContactSubmission
+from app.core.config import settings
 from app.core.database import Base, engine
+from app.core.rate_limit import RATE_LIMIT_FILE
 from app.main import app
 
 
@@ -43,6 +46,22 @@ async def clean_contact_submissions():
     async with open_test_connection() as connection:
         async with connection.begin():
             await connection.execute(delete(ContactSubmission))
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limit_file():
+    yield
+    rate_limit_path = settings.resolved_data_dir / RATE_LIMIT_FILE
+    if rate_limit_path.exists():
+        rate_limit_path.unlink()
+
+
+@pytest.fixture(autouse=True)
+def mock_contact_emails(monkeypatch):
+    async def noop(*_args, **_kwargs):
+        return None
+
+    monkeypatch.setattr("app.contact.service.send_contact_emails", noop)
 
 
 @pytest.fixture

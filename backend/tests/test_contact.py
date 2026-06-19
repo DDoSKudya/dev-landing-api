@@ -1,4 +1,5 @@
-from sqlalchemy import select
+from app.contact.ai import AIResult
+from sqlalchemy import func, select
 
 from app.contact.models import ContactSubmission
 from app.core.database import async_session_factory
@@ -33,6 +34,7 @@ async def test_post_contact_success(client):
     assert row.email == VALID_PAYLOAD["email"]
     assert row.comment == VALID_PAYLOAD["comment"]
     assert row.client_ip == "127.0.0.1"
+    assert row.ai_status == "unavailable"
 
 
 async def test_post_contact_invalid_email(client):
@@ -43,3 +45,75 @@ async def test_post_contact_invalid_email(client):
     assert response.status_code == 422
     body = response.json()
     assert body["error"] == "validation_error"
+
+
+async def test_post_contact_ai_unavailable_still_created(client, monkeypatch):
+    async def unavailable(_comment: str):
+        return None
+
+    monkeypatch.setattr("app.contact.service.analyze_comment", unavailable)
+
+    response = await client.post("/api/contact", json=VALID_PAYLOAD)
+    assert response.status_code == 201
+    assert response.json()["ai_status"] == "unavailable"
+
+
+async def test_post_contact_ai_success(client, monkeypatch):
+    async def analyze(_comment: str):
+        return AIResult(
+            sentiment="positive",
+            request_category="collaboration",
+            draft_reply="Thank you for your interest.",
+        )
+
+    monkeypatch.setattr("app.contact.service.analyze_comment", analyze)
+
+    response = await client.post("/api/contact", json=VALID_PAYLOAD)
+    assert response.status_code == 201
+    body = response.json()
+    assert body["ai_status"] == "ok"
+    assert body["sentiment"] == "positive"
+    assert body["request_category"] == "collaboration"
+
+    async with async_session_factory() as session:
+        row = await session.scalar(
+            select(ContactSubmission).where(ContactSubmission.id == body["id"])
+        )
+
+    assert row is not None
+    assert row.ai_status == "ok"
+    assert row.sentiment == "positive"
+    assert row.request_category == "collaboration"
+    assert row.ai_draft_reply == "Thank you for your interest."
+
+
+async def test_post_contact_rate_limit(client, monkeypatch):
+    monkeypatch.setattr("app.core.rate_limit.settings.rate_limit_requests", 2)
+
+    for _ in range(2):
+        response = await client.post("/api/contact", json=VALID_PAYLOAD)
+        assert response.status_code == 201
+
+    response = await client.post("/api/contact", json=VALID_PAYLOAD)
+    assert response.status_code == 429
+    body = response.json()
+    assert body["error"] == "rate_limit_exceeded"
+    assert response.headers.get("retry-after")
+
+
+async def test_post_contact_email_failure_keeps_submission(client, monkeypatch):
+    from app.core.exceptions import EmailDeliveryError
+
+    async def fail(*_args, **_kwargs):
+        raise EmailDeliveryError()
+
+    monkeypatch.setattr("app.contact.service.send_contact_emails", fail)
+
+    response = await client.post("/api/contact", json=VALID_PAYLOAD)
+    assert response.status_code == 502
+    assert response.json()["error"] == "email_delivery_failed"
+
+    async with async_session_factory() as session:
+        count = await session.scalar(select(func.count()).select_from(ContactSubmission))
+
+    assert count == 1

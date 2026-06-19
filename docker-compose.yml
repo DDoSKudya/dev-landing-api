@@ -5,11 +5,14 @@ services:
     environment:
       DATA_DIR: /data
       LOGS_DIR: /logs
+      SMTP_HOST: mailhog
     volumes:
       - ./data:/data
       - ./logs:/logs
     ports:
       - "8000:8000"
+    depends_on:
+      - mailhog
     healthcheck:
       test:
         [
@@ -48,7 +51,6 @@ services:
       - dev-landing-net
 
   mailhog:
-    profiles: ["dev"]
     image: mailhog/mailhog
     ports:
       - "1025:1025"
