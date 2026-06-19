@@ -8,6 +8,7 @@ from app.core.database import engine
 from app.core.error_handlers import register_error_handlers
 from app.core.logging import setup_logging
 from app.core.middleware import DbSessionMiddleware, RequestLoggingMiddleware
+from app.contact.router import router as contact_router
 from app.health.router import router as health_router
 
 
@@ -35,6 +36,7 @@ def create_app() -> FastAPI:
     app.add_middleware(DbSessionMiddleware)
 
     app.include_router(health_router, prefix="/api")
+    app.include_router(contact_router, prefix="/api")
     return app
 
 

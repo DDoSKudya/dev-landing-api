@@ -1,11 +1,14 @@
-.PHONY: install dev test lint backend frontend
+.PHONY: install dev test lint migrate backend frontend
 
 POETRY = POETRY_KEYRING_ENABLED=0 poetry
 
 install:
 	cd backend && $(POETRY) env use python3.12 && $(POETRY) install
 
-dev:
+migrate:
+	cd backend && $(POETRY) run alembic upgrade head
+
+dev: migrate
 	cd backend && $(POETRY) run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 test:
