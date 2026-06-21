@@ -13,20 +13,6 @@ const contactLinks = [
     external: false,
   },
   {
-    label: "Телефон",
-    value: profile.contacts.phoneDisplay,
-    href: `tel:${profile.contacts.phone}`,
-    icon: "☎",
-    external: false,
-  },
-  {
-    label: "Telegram",
-    value: profile.contacts.telegram,
-    href: profile.contacts.telegramUrl,
-    icon: "TG",
-    external: true,
-  },
-  {
     label: "GitHub",
     value: "DDoSKudya",
     href: profile.contacts.github,

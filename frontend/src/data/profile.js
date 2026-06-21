@@ -10,10 +10,6 @@ export const profile = {
     "Backend для production-систем: API, данные, интеграции и сопровождение legacy. Опыт в видеонаблюдении и видеоаналитике.",
   contacts: {
     email: "igor@kud93.ru",
-    phone: "+79649150935",
-    phoneDisplay: "+7 (964) 915-09-35",
-    telegram: "@ddoskudya",
-    telegramUrl: "https://t.me/ddoskudya",
     setka: "https://set.ki/account/oSx4xbs",
     github: "https://github.com/DDoSKudya",
   },

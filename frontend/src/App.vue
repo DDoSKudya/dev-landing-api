@@ -98,14 +98,6 @@ onUnmounted(() => window.removeEventListener("scroll", onScroll));
             GitHub
           </a>
           <a
-            :href="profile.contacts.telegramUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="nav-link"
-          >
-            Telegram
-          </a>
-          <a
             :href="`mailto:${profile.contacts.email}`"
             class="nav-link"
           >
